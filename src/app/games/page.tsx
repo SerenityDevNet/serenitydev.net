@@ -1,7 +1,7 @@
 // src/app/games/page.tsx
 import Link from 'next/link';
 import type { Metadata } from 'next';
-
+/*
 // This is good practice for setting page titles
 export const metadata: Metadata = {
   title: 'Games | Serenity Dev',
@@ -72,34 +72,27 @@ async function getAllGames(): Promise<Game[]> {
 
   return json.data.games.nodes;
 }
+*/
+
+
 
 // --- Step 3: Your Page Component (now an Async Component) ---
 // This is a "React Server Component" by default
 export default async function GamesPage() {
   // We call the fetch function directly inside the component
+  /*
   const allGames = await getAllGames();
-
+  */
   return (
     <div className="">
       <main className="text-[500%]">
         <ul>
           {/* We are now MAPPING over the "allGames" variable */}
-          {allGames.map((game) => (
-            <Link href={`/games/${game.slug}`} key={game.slug}>
-              <li className="h-150 bg-emerald-950">
-                {/* You can now add your cover image back in!
-                  e.g., <img src={game.gameFields.coverImage?.mediaItemUrl} />
-                */}
-                <p>{game.title}</p>
-                {/* We can also check if the date exists before rendering */}
-                {game.gameFields.releaseDate && (
-                  <p className="text-[20%]">Release: {game.gameFields.releaseDate}</p>
-                )}
-              </li>
-            </Link>
-          ))}
+          
         </ul>
       </main>
     </div>
   );
+  
+
 }
