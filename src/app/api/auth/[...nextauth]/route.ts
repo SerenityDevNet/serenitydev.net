@@ -1,8 +1,8 @@
 import NextAuth, { NextAuthOptions } from "next-auth"
 import TwitchProvider from "next-auth/providers/twitch"
 
-// Define authOptions for better structure and type safety
-export const authOptions: NextAuthOptions = {
+// Define authOptions internally (no export needed for this file)
+const authOptions: NextAuthOptions = {
   providers: [
     TwitchProvider({
       clientId: process.env.TWITCH_CLIENT_ID as string,
