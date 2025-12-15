@@ -51,14 +51,6 @@ const GamesPage = () => {
                   
                 </li>
               </a>
-              <a href="/games/reap-what-you-sow">
-                <li className="h-150 bg-yellow-950">
-                  
-                    <p>Reap What You Sow (In development)</p>
-                  
-                  
-                </li>
-              </a>
           </ul>
         </main>
     </div>

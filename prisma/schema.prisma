@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Vercel/Neon uses a pooled URL for the app, and a non-pooled URL for migrations
+  url       = env("POSTGRES_PRISMA_URL") 
+  directUrl = env("POSTGRES_URL_NON_POOLING") 
+}
+
+// Your User (Twitch Account)
+model User {
+  id        String   @id // This will be your Twitch UID (e.g. "547329691")
+  name      String?  // Display Name (e.g. "Serenity_Dev")
+  createdAt DateTime @default(now())
+  
+  // A user can have many toys
+  toys      Toy[]
+}
+
+// The Toys/Items
+model Toy {
+  id        String   @id @default(cuid()) // Unique ID for the specific item instance
+  name      String   // e.g. "Wretched Rose Sword"
+  type      String   // e.g. "Weapon", "Cosmetic"
+  obtainedAt DateTime @default(now())
+
+  // Link it to the User
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+}
