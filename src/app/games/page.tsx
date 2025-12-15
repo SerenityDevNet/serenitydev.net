@@ -1,68 +1,105 @@
-const GamesPage = () => {
-  return (
-    <div className="">
-        <main className="text-[500%]">
-          <ul>
-              <a href="/games/wretched-rose">
-                <li className="h-150 bg-emerald-950">
-                  
-                    <p>Wretched Rose (In development)</p>
-                  
-                  
-                </li>
-              </a>
-              <a href="/games/up-to-bat">
-                <li className="h-150 bg-violet-950">
-                  
-                    <p>Up to Bat! (In development)</p>
-                  
-                  
-                </li>
-              </a>
-              <a href="/games/echoes-in-my-mind">
-                <li className="h-150 bg-lime-950">
-                  
-                    <p>Echoes in my Mind</p>
-                  
-                  
-                </li>
-              </a>
-              <a href="/games/hunt-for-halford">
-                <li className="h-150 bg-rose-950">
-                  
-                    <p>Hunt for Halford</p>
-                  
-                  
-                </li>
-              </a>
-              <a href="/games/hero-for-a-day">
-                <li className="h-150 bg-indigo-950">
-                  
-                    <p>Hero for a Day</p>
-                  
-                  
-                </li>
-              </a>
-              <a href="/games/restoring-reparia">
-                <li className="h-150 bg-fuchsia-950">
-                  
-                    <p>Restoring Reparia (Working title)</p>
-                  
-                  
-                </li>
-              </a>
-              <a href="/games/reap-what-you-sow">
-                <li className="h-150 bg-yellow-950">
-                  
-                    <p>Reap What You Sow (In development)</p>
-                  
-                  
-                </li>
-              </a>
-          </ul>
-        </main>
-    </div>
-  );
+// src/app/games/page.tsx
+import Link from 'next/link';
+import type { Metadata } from 'next';
+
+// This is good practice for setting page titles
+export const metadata: Metadata = {
+  title: 'Games | Serenity Dev',
 };
 
-export default GamesPage;
+// --- Step 1: Define the "Type" for our data ---
+// (This is the same as before)
+type Game = {
+  title: string;
+  slug: string; // We'll need this for the link!
+  gameFields: {
+    releaseDate: string | null;
+    coverImage: {
+      mediaItemUrl: string;
+    } | null;
+  };
+};
+
+// --- Step 2: The Data Fetching (The *NEW* App Router Way) ---
+// We create a separate function to keep the component clean.
+// This function will run on the server.
+async function getAllGames(): Promise<Game[]> {
+  const query = `
+    query GetAllGames {
+      games(where: {status: PUBLISH}) {
+        nodes {
+          id
+          slug
+          title
+          gameFields {
+            coverImage {
+              node {
+                mediaItemUrl
+              }
+            }
+            releaseDate
+            fieldGroupName
+          }
+        }
+      }
+    }
+  `;
+
+  // We use our .env.local variable!
+  const apiUrl = process.env.WORDPRESS_API_URL;
+
+  // A little error-checking is good
+  if (!apiUrl) {
+    throw new Error('WORDPRESS_API_URL is not defined in .env.local');
+  }
+
+  const res = await fetch(apiUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query }),
+    // THIS is the new "revalidate: 60"
+    // It tells Next.js to re-fetch this data every 60 seconds
+    next: { revalidate: 60 },
+  });
+
+  const json = await res.json();
+
+  // Error handling
+  if (json.errors) {
+    console.error('GraphQL Errors:', json.errors);
+    throw new Error('Failed to fetch API');
+  }
+
+  return json.data.games.nodes;
+}
+
+// --- Step 3: Your Page Component (now an Async Component) ---
+// This is a "React Server Component" by default
+export default async function GamesPage() {
+  // We call the fetch function directly inside the component
+  const allGames = await getAllGames();
+
+  return (
+    <div className="">
+      <main className="text-[500%]">
+        <ul>
+          {/* We are now MAPPING over the "allGames" variable */}
+          {allGames.map((game) => (
+            <Link href={`/games/${game.slug}`} key={game.slug}>
+              <li className="h-150 bg-emerald-950">
+                {/* You can now add your cover image back in!
+                  e.g., <img src={game.gameFields.coverImage?.mediaItemUrl} />
+                */}
+                <p>{game.title}</p>
+                {/* We can also check if the date exists before rendering */}
+                {game.gameFields.releaseDate && (
+                  <p className="text-[20%]">Release: {game.gameFields.releaseDate}</p>
+                )}
+              </li>
+            </Link>
+          ))}
+        </ul>
+      </main>
+    </div>
+  );
+}
