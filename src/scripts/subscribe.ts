@@ -1,8 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
-// TOGGLE THIS VARIABLE TO SWITCH ENVIRONMENTS
-const TARGET_ENV = 'prod'; // Options: 'beta' or 'prod'
 
 async function subscribe() {
   const CLIENT_ID = process.env.TWITCH_CLIENT_ID;
@@ -11,11 +9,9 @@ async function subscribe() {
   const MY_BROADCASTER_ID = "547329691"; 
 
   // Select the correct URL based on the toggle above
-  const CALLBACK_URL = TARGET_ENV === 'prod' 
-    ? "https://serenitydev.net/api/webhooks/twitch" 
-    : "https://beta.serenitydev.net/api/webhooks/twitch";
+  const CALLBACK_URL = "https://serenitydev.net/api/webhooks/twitch" 
 
-  console.log(`📡 Subscribing to ${TARGET_ENV.toUpperCase()}: ${CALLBACK_URL}`);
+  console.log(`📡 Subscribing to PRODUCTION: ${CALLBACK_URL}`);
 
   // 1. Get Token
   const tokenRes = await fetch(`https://id.twitch.tv/oauth2/token?client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&grant_type=client_credentials`, { method: 'POST' });

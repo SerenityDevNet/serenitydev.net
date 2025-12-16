@@ -12,7 +12,9 @@ async function deleteSubs() {
 
   // 2. Delete the specific IDs from your log
   const idsToDelete = [
-    "0bf659c8-698e-45dc-8047-4ddaa0377437"
+    "447727eb-f9c5-4949-8b70-59533530b5f6",
+    "28280dc9-bd63-42c2-88be-a56bc0355b13",
+    "74295324-ce2e-4bcf-87d2-30414e186ea5"
   ];
 
   for (const id of idsToDelete) {
