@@ -31,7 +31,6 @@ export default function WebsiteLayout({
             <a href="/games">Games</a>
             <a href="/mods">Mods/Romhacks/Shaders</a>
             <a href="/art">Art</a>
-            <a href="/toys">Toybox</a> {/* Added this for you! */}
           </div>
         </header>
 
