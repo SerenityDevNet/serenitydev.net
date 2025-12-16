@@ -24,8 +24,9 @@ export default function OverlayPage() {
     return () => clearInterval(interval);
   }, [lastId]);
 
+
   return (
-    <div className="h-screen w-screen bg-transparent flex items-end justify-center pb-20 overflow-hidden">
+    <div className="h-full w-full bg-transparent flex items-end justify-center pb-20 overflow-hidden">
       <AnimatePresence>
         {alert && (
           <motion.div 
@@ -41,11 +42,8 @@ export default function OverlayPage() {
             
             <div>
               <h1 className="text-3xl font-bold text-white font-mono">
-                <span className="text-purple-400">{alert.user}</span> just got:
+                <span className="text-purple-400">{alert.user}</span> subscribed!
               </h1>
-              <p className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
-                {alert.item}
-              </p>
             </div>
           </motion.div>
         )}

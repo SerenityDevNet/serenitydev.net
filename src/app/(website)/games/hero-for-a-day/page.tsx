@@ -1,4 +1,4 @@
-import ItchioEmbed from "@/app/components/ItchioEmbed";
+import ItchioEmbed from "@/app/(website)/components/ItchioEmbed";
 
 const HeroForADayPage = () => {
   return (
