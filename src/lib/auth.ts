@@ -1,7 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import TwitchProvider from "next-auth/providers/twitch";
 
-const BASE_URL = process.env.NEXTAUTH_URL || "http://localhost:3000";
+const BASE_URL = process.env.NEXTAUTH_URL;
 
 export const authOptions: NextAuthOptions = {
   providers: [
