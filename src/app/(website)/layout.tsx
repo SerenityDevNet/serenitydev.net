@@ -29,7 +29,7 @@ export default function WebsiteLayout({
           <div className="row-start-3 flex gap-x-[10vw] flex-wrap items-center justify-center bg-night-1 text-[2vw]">
             <a href="/">Home</a>
             <a href="/games">Games</a>
-            <a href="/mods">Mods/Romhacks/Shaders</a>
+            <a href="/toybox">Toybox</a>
             <a href="/art">Art</a>
           </div>
         </header>
