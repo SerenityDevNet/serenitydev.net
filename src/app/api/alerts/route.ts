@@ -1,35 +1,13 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+
+export const dynamic = 'force-dynamic'; // Prevent caching
 
 export async function GET() {
-  // Find the oldest "Unread" alert (we will add an 'isRead' flag logic later)
-  // For now, let's just fetch the latest toy created in the last 5 seconds
-  const fiveSecondsAgo = new Date(Date.now() - 5000);
-
-  const latestToy = await prisma.toy.findFirst({
-    where: {
-      obtainedAt: {
-        gte: fiveSecondsAgo,
-      },
-    },
-    orderBy: {
-      obtainedAt: 'desc',
-    },
-    include: {
-      user: true, // Get the username
-    },
-  });
-
-  if (!latestToy) {
-    return NextResponse.json({ alert: null });
-  }
+  // Read the global variable we set in the Webhook Handler
+  // This connects the POST (Twitch) to the GET (Overlay)
+  const alert = global.latestAlert || null;
 
   return NextResponse.json({ 
-    alert: {
-      id: latestToy.id,
-      user: latestToy.user.name,
-      item: latestToy.name,
-      type: latestToy.type, // "Channel Redeem", "Subscription Reward", etc.
-    }
+    alert: alert 
   });
 }
