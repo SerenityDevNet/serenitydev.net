@@ -1,4 +1,4 @@
-import SpeechBubble from "@/components/overlay/speech-bubble";
+import SpeechBubble from "@/components/y2roll/y2roll-speech-bubble";
 
 export default function CaptionsPage() {
   return (

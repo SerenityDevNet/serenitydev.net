@@ -3,13 +3,7 @@ import { useEffect, useState, useRef } from "react";
 
 const FRAME_SEQUENCE = [1, 2, 3, 4, 3, 2];
 
-// Define the props we expect from the parent page
-interface AvatarProps {
-  bgColor?: string;
-  setBgColor?: (color: string) => void;
-}
-
-export default function SerenityAvatar({ bgColor = "transparent", setBgColor }: AvatarProps) {
+export default function SerenityAvatar() {
   const [frameIndex, setFrameIndex] = useState(0);
   const [isTalking, setIsTalking] = useState(false);
   const [audioStarted, setAudioStarted] = useState(false);
@@ -23,8 +17,16 @@ export default function SerenityAvatar({ bgColor = "transparent", setBgColor }: 
   const analyserRef = useRef<AnalyserNode | null>(null);
   const dataArrayRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
 
+  // 1. INITIALIZATION LOGIC
   const initAudio = async () => {
-    if (audioContextRef.current) return;
+    // If we already have a context, just ensure it's running
+    if (audioContextRef.current) {
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
+      setAudioStarted(true);
+      return;
+    }
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -45,13 +47,28 @@ export default function SerenityAvatar({ bgColor = "transparent", setBgColor }: 
       dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount);
 
       setAudioStarted(true);
-      if (audioContext.state === 'suspended') await audioContext.resume();
 
     } catch (e) {
       console.error("Mic access denied", e);
+      alert("Microphone access denied! Check browser settings.");
     }
   };
 
+  // 2. AUTO-START ATTEMPT (For OBS with flags)
+  useEffect(() => {
+    // Try to start immediately on load. 
+    // This often works in OBS if the flag is set, but fails in normal Chrome.
+    const attemptAutoStart = async () => {
+        try {
+            await initAudio();
+        } catch (e) {
+            // If it fails, we just wait for the user click
+        }
+    };
+    attemptAutoStart();
+  }, []);
+
+  // 3. VOLUME CHECK LOOP
   useEffect(() => {
     if (!audioStarted) return;
     const checkVolume = () => {
@@ -73,6 +90,7 @@ export default function SerenityAvatar({ bgColor = "transparent", setBgColor }: 
     return () => cancelAnimationFrame(handle);
   }, [audioStarted, threshold]);
 
+  // 4. ANIMATION LOOP
   useEffect(() => {
     const interval = setInterval(() => {
       setFrameIndex((currentIdx) => {
@@ -90,22 +108,23 @@ export default function SerenityAvatar({ bgColor = "transparent", setBgColor }: 
   return (
     <div className="w-full h-full relative group">
        
+       {/* CLICK OVERLAY - Now z-50 and covers everything to catch clicks */}
        {!audioStarted && (
          <div 
-            className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 cursor-pointer"
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 cursor-pointer"
             onClick={initAudio}
          >
-            <div className="bg-red-600 text-white font-mono font-bold px-6 py-4 border-4 border-white animate-pulse">
-               CLICK TO ENABLE MIC
+            <div className="bg-red-600 text-white font-mono font-bold px-8 py-6 border-4 border-white animate-pulse text-2xl shadow-[0_0_50px_rgba(255,0,0,0.5)]">
+               CLICK ANYWHERE TO START MIC
             </div>
          </div>
        )}
 
-       {/* SETTINGS PANEL (Hover) */}
+       {/* SETTINGS PANEL */}
        {audioStarted && (
-         <div className="absolute top-4 left-4 z-50 bg-black/90 border border-white p-4 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto w-64 space-y-4">
+         <div className="absolute top-4 left-4 z-[9999] bg-black/90 border border-white p-4 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto w-64 space-y-4">
             
-            {/* Sensitivity & Speed Controls (Same as before) */}
+            {/* Sensitivity */}
             <div>
               <h3 className="text-white font-mono text-[10px] mb-1 uppercase font-bold text-[#eab308]">
                  Mic Sensitivity (Gate: {threshold})
@@ -117,6 +136,7 @@ export default function SerenityAvatar({ bgColor = "transparent", setBgColor }: 
               <input type="range" min="0" max="100" value={threshold} onChange={(e) => setThreshold(Number(e.target.value))} className="w-full accent-[#eab308] cursor-pointer h-2" />
             </div>
 
+            {/* Speed */}
             <div>
               <h3 className="text-white font-mono text-[10px] mb-1 uppercase font-bold text-[#eab308]">
                  Anim Speed ({animSpeed}ms)
@@ -128,24 +148,10 @@ export default function SerenityAvatar({ bgColor = "transparent", setBgColor }: 
               </div>
             </div>
 
-            {/* CHROMA KEY CONTROLS (Updated to use setBgColor prop) */}
-            {setBgColor && (
-              <div>
-                 <h3 className="text-white font-mono text-[10px] mb-2 uppercase font-bold text-[#eab308]">
-                   Global Background
-                 </h3>
-                 <div className="grid grid-cols-4 gap-2">
-                    <button onClick={() => setBgColor("transparent")} className={`h-6 rounded border ${bgColor === 'transparent' ? 'border-[#eab308]' : 'border-gray-600'} bg-[url('/assets/noise.png')]`} title="Transparent" />
-                    <button onClick={() => setBgColor("#00FF00")} className={`h-6 rounded border ${bgColor === '#00FF00' ? 'border-white' : 'border-transparent'} bg-[#00FF00]`} title="Green Screen" />
-                    <button onClick={() => setBgColor("#0000FF")} className={`h-6 rounded border ${bgColor === '#0000FF' ? 'border-white' : 'border-transparent'} bg-[#0000FF]`} title="Blue Screen" />
-                    <button onClick={() => setBgColor("#FF00FF")} className={`h-6 rounded border ${bgColor === '#FF00FF' ? 'border-white' : 'border-transparent'} bg-[#FF00FF]`} title="Magenta Screen" />
-                 </div>
-              </div>
-            )}
          </div>
        )}
 
-       {/* AVATAR */}
+       {/* AVATAR IMAGE */}
        {/* eslint-disable-next-line @next/next/no-img-element */}
        <img 
         src={imageSrc} 

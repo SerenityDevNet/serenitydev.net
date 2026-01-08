@@ -18,7 +18,8 @@
     "next": "^15.2.3",
     "next-auth": "^4.24.13",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "tmi.js": "^1.8.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -26,6 +27,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/tmi.js": "^1.8.6",
     "prisma": "^5.22.0",
     "tailwindcss": "^4",
     "typescript": "^5"

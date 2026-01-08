@@ -34,3 +34,8 @@ body {
   mask-image: url("data:image/svg+xml,%3Csvg width='200' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 10 L5 0 L10 10 L15 0 L20 10 L25 0 L30 10 L35 0 L200 0 L200 60 L0 60 Z' fill='black'/%3E%3C/svg%3E");
   background-color: #facc15; /* Yellow Tape Color */
 }
+
+/* Makes the top of the chat fade out */
+.mask-fade-top {
+  mask-image: linear-gradient(to bottom, transparent 0%, black 20%);
+}
