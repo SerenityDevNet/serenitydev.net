@@ -16,15 +16,25 @@ export default function SerenityAvatar() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const dataArrayRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // 1. INITIALIZATION LOGIC
   const initAudio = async () => {
-    // If we already have a context, just ensure it's running
+    // If running, do nothing
+    if (audioStarted) return;
+
+    // If context exists but suspended, try to resume
     if (audioContextRef.current) {
       if (audioContextRef.current.state === 'suspended') {
-        await audioContextRef.current.resume();
+        try {
+            await audioContextRef.current.resume();
+            setAudioStarted(true);
+        } catch (e) {
+            // Resume failed, waiting for user interaction
+        }
+      } else if (audioContextRef.current.state === 'running') {
+          setAudioStarted(true);
       }
-      setAudioStarted(true);
       return;
     }
 
@@ -49,22 +59,28 @@ export default function SerenityAvatar() {
       setAudioStarted(true);
 
     } catch (e) {
-      console.error("Mic access denied", e);
-      // Optional: alert("Microphone access denied! Check browser settings.");
+      console.error("Mic access denied or pending interaction", e);
     }
   };
 
-  // 2. AUTO-START ATTEMPT (For OBS with flags)
+  // 2. AGGRESSIVE AUTO-START LOOP
+  // This tries to start the audio engine every 1 second until it works.
+  // This solves the issue where OBS loads the page before the audio device is ready.
   useEffect(() => {
-    const attemptAutoStart = async () => {
-        try {
-            await initAudio();
-        } catch (e) {
-            // Silently fail if interaction is needed
+    const attemptStart = () => {
+        if (!audioStarted) {
+            initAudio();
         }
     };
-    attemptAutoStart();
-  }, []);
+
+    // Try immediately
+    attemptStart();
+
+    // Retry every second
+    const interval = setInterval(attemptStart, 1000);
+
+    return () => clearInterval(interval);
+  }, [audioStarted]);
 
   // 3. VOLUME CHECK LOOP
   useEffect(() => {
@@ -106,23 +122,21 @@ export default function SerenityAvatar() {
   return (
     <div className="w-full h-full relative group">
        
-       {/* CLICK OVERLAY - CRITICAL FIX 
-          Using 'fixed inset-0 z-[9999]' forces this red screen to cover the ENTIRE browser window
-          regardless of where this component is buried in the HTML.
-          This ensures you can always click it to start the audio engine.
+       {/* INVISIBLE CLICK LAYER 
+          We removed the red background and text. 
+          It is now invisible (opacity-0) but still covers the screen (fixed inset-0).
+          If auto-start fails, you can Right Click Source -> Interact -> Click Anywhere to fix it,
+          but your viewers won't see a giant error box.
        */}
        {!audioStarted && (
          <div 
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 cursor-pointer"
+            className="fixed inset-0 z-[9999] cursor-pointer opacity-0"
             onClick={initAudio}
-         >
-            <div className="bg-red-600 text-white font-mono font-bold px-8 py-6 border-4 border-white animate-pulse text-2xl shadow-[0_0_50px_rgba(255,0,0,0.5)]">
-               CLICK ANYWHERE TO START MIC
-            </div>
-         </div>
+            title="Click to start audio"
+         />
        )}
 
-       {/* SETTINGS PANEL (Hidden unless hovered) */}
+       {/* SETTINGS PANEL (Only visible on hover + audio started) */}
        {audioStarted && (
          <div className="absolute top-4 left-4 z-[9999] bg-black/90 border border-white p-4 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto w-64 space-y-4">
             
