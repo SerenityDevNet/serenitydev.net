@@ -1,21 +1,4 @@
 "use client";
-import { useMemo } from 'react';
-
-// --- ASSET DEFINITIONS ---
-
-// Helper to generate a random number within a range from a seed
-const seededRandom = (seed: number, min: number, max: number) => {
-    const x = Math.sin(seed) * 10000;
-    return Math.floor((x - Math.floor(x)) * (max - min + 1)) + min;
-};
-
-// Helper to generate Lobotomy-style hair color (0-118 range)
-const generateHairColor = (hash: number) => {
-    const r = seededRandom(hash, 0, 118);
-    const g = seededRandom(hash + 1, 0, 118);
-    const b = seededRandom(hash + 2, 0, 118);
-    return `rgb(${r}, ${g}, ${b})`;
-};
 
 const EYE_COLORS = ['#333', '#3b82f6', '#22c55e', '#a855f7', '#ef4444'];
 
@@ -61,14 +44,6 @@ const HAIR_FRONTS = [
   <path key="f9" d="M35,10 Q20,25 15,15 L15,10 Q25,18 35,8 Z" />, 
   <path key="f10" d="M10,15 Q25,22 40,15 L40,10 Q25,18 10,10 Z" />, 
   <path key="f11" d="M18,12 L25,18 L32,12" fill="none" strokeWidth="3" />, 
-];
-
-// REVISED EXPRESSIONS (Raised positions)
-const EXPRESSIONS = [
-  <path key="neu" d="M20,33 L30,33" stroke="#333" strokeWidth="2" strokeLinecap="round" />,
-  <path key="smi" d="M20,33 Q25,37 30,33" fill="none" stroke="#333" strokeWidth="2" strokeLinecap="round" />,
-  <path key="fro" d="M20,35 Q25,31 30,35" fill="none" stroke="#333" strokeWidth="2" strokeLinecap="round" />,
-  <circle key="oh" cx="25" cy="34" r="2" fill="none" stroke="#333" strokeWidth="2" />,
 ];
 
 // E.G.O Suits
@@ -120,40 +95,51 @@ const EGO_SUITS = [
     </g>,
 ];
 
-const generateFeatures = (username: string) => {
-  let hash = 0;
-  const normalized = username.toLowerCase(); 
-  for (let i = 0; i < normalized.length; i++) {
-     hash = normalized.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  
-  const skinTone = '#FFFFFF';
-  const hColor = generateHairColor(hash);
-  const backIndex = Math.abs(hash % HAIR_BACKS.length);
-  const frontIndex = Math.abs((hash >> 3) % HAIR_FRONTS.length);
-  const eColor = EYE_COLORS[Math.abs((hash >> 4) % EYE_COLORS.length)];
-  const expr = EXPRESSIONS[Math.abs((hash >> 6) % EXPRESSIONS.length)];
-  const eyeShape = Math.abs(hash % 2); 
-  const rawSuitIndex = Math.abs((hash >> 8) % 20); 
-  const suitIndex = rawSuitIndex > 8 ? 0 : rawSuitIndex; 
+// Ensure this matches your array length
+const EXPRESSIONS = [
+  <path key="neu" d="M20,33 L30,33" stroke="#333" strokeWidth="2" strokeLinecap="round" />,
+  <path key="smi" d="M20,33 Q25,37 30,33" fill="none" stroke="#333" strokeWidth="2" strokeLinecap="round" />,
+  <path key="fro" d="M20,35 Q25,31 30,35" fill="none" stroke="#333" strokeWidth="2" strokeLinecap="round" />,
+  <circle key="oh" cx="25" cy="34" r="2" fill="none" stroke="#333" strokeWidth="2" />,
+];
 
-  return { skinTone, hColor, backIndex, frontIndex, eColor, expr, eyeShape, suitIndex };
-};
+interface AgentProps {
+  hairIndex: number;
+  backHairIndex: number;
+  suitIndex: number;
+  eyeIndex: number;
+  mouthIndex: number; // <--- ADDED PROP
+  hairColor: string;
+  deptColor: string;
+  deptName: string;
+}
 
-export default function AgentPortrait({ username, deptColor, deptName }: { username: string, deptColor: string, deptName?: string }) {
-  const { skinTone, hColor, backIndex, frontIndex, eColor, expr, eyeShape, suitIndex } = useMemo(() => generateFeatures(username), [username]);
+export default function AgentPortrait({ 
+  hairIndex = 0, 
+  backHairIndex = 0, 
+  suitIndex = 0, 
+  eyeIndex = 0, 
+  mouthIndex = 0, // <--- DEFAULT
+  hairColor = "#000",
+  deptColor, 
+  deptName 
+}: AgentProps) {
 
   const isRabbit = deptName === "RABBIT";
   const RABBIT_ORANGE = "#FD3C00";
-
-  const hairBack = HAIR_BACKS[backIndex];
-  const hairFront = HAIR_FRONTS[frontIndex];
+  const eColor = EYE_COLORS[eyeIndex % EYE_COLORS.length];
+  
+  // Select Assets
+  const hairBack = HAIR_BACKS[backHairIndex % HAIR_BACKS.length];
+  const hairFront = HAIR_FRONTS[hairIndex % HAIR_FRONTS.length];
+  const suit = EGO_SUITS[suitIndex % EGO_SUITS.length];
+  const expression = EXPRESSIONS[mouthIndex % EXPRESSIONS.length]; // <--- SELECT MOUTH
 
   return (
     <svg viewBox="0 0 50 50" className="w-full h-full drop-shadow-md" xmlns="http://www.w3.org/2000/svg">
       
       {/* 1. HAIR BACK */}
-      {!isRabbit && hairBack && <g fill={hColor}>{hairBack}</g>}
+      {!isRabbit && hairBack && <g fill={hairColor}>{hairBack}</g>}
 
       {/* 2. BODY */}
       <g transform="translate(0, 40)">
@@ -163,63 +149,51 @@ export default function AgentPortrait({ username, deptColor, deptName }: { usern
                 <rect x="15" y="-2" width="20" height="4" fill="#333" /> 
              </g>
          ) : (
-             EGO_SUITS[suitIndex] || EGO_SUITS[0]
+             suit
          )}
       </g>
 
       {/* 3. HEAD */}
       {isRabbit ? (
+          /* Rabbit Head Logic (Unchanged) */
           <g>
               <ellipse cx="18" cy="15" rx="4" ry="12" fill="#111" stroke={RABBIT_ORANGE} strokeWidth="1" />
               <ellipse cx="32" cy="15" rx="4" ry="12" fill="#111" stroke={RABBIT_ORANGE} strokeWidth="1" />
               <ellipse cx="18" cy="15" rx="2" ry="8" fill={RABBIT_ORANGE} opacity="0.5" />
               <ellipse cx="32" cy="15" rx="2" ry="8" fill={RABBIT_ORANGE} opacity="0.5" />
-
               <circle cx="25" cy="28" r="12" fill="#1a1a1a" stroke="#000" strokeWidth="1"/>
-              
               <circle cx="14" cy="34" r="5" fill={RABBIT_ORANGE} stroke="#444" strokeWidth="1" />
               <circle cx="14" cy="34" r="2" fill="#111" />
               <circle cx="36" cy="34" r="5" fill={RABBIT_ORANGE} stroke="#444" strokeWidth="1" />
               <circle cx="36" cy="34" r="2" fill="#111" />
-
               <circle cx="19" cy="26" r="4" fill="#4ade80" filter="url(#glow)"/>
               <circle cx="31" cy="26" r="4" fill="#4ade80" filter="url(#glow)"/>
-              
               <rect x="24" y="32" width="2" height="6" fill="#444" />
-
               <defs>
                 <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
                     <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
-                    <feMerge>
-                        <feMergeNode in="coloredBlur"/>
-                        <feMergeNode in="SourceGraphic"/>
-                    </feMerge>
+                    <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
                 </filter>
               </defs>
           </g>
       ) : (
+          /* Standard Head */
           <>
-            <circle cx="25" cy="28" r="12" fill={skinTone} stroke="#1a1a1a" strokeWidth="0.5"/>
+            <circle cx="25" cy="28" r="12" fill="#FFFFFF" stroke="#1a1a1a" strokeWidth="0.5"/>
             <g>
-                {eyeShape === 0 ? (
-                    <>
-                        <circle cx="20" cy="26" r="2" fill={eColor}/>
-                        <circle cx="30" cy="26" r="2" fill={eColor}/>
-                    </>
-                ) : (
-                    <>
-                        <rect x="18" y="25" width="4" height="2" fill={eColor}/>
-                        <rect x="28" y="25" width="4" height="2" fill={eColor}/>
-                    </>
-                )}
-                {expr}
+                {/* Eyes */}
+                <circle cx="20" cy="26" r="2" fill={eColor}/>
+                <circle cx="30" cy="26" r="2" fill={eColor}/>
+                
+                {/* Mouth Expression */}
+                {expression} 
             </g>
           </>
       )}
 
       {/* 5. HAIR FRONT */}
       {!isRabbit && hairFront && (
-          <g fill={hColor}>
+          <g fill={hairColor}>
             {hairFront}
           </g>
       )}

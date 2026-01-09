@@ -30,3 +30,28 @@ model Toy {
   userId    String
   user      User     @relation(fields: [userId], references: [id])
 }
+
+model LobotomyAgent {
+  username      String    @id
+  
+  // Stats
+  hp            Int       @default(100)
+  sp            Int       @default(100)
+  status        String    @default("ACTIVE")
+  cooldownUntil DateTime? 
+  totalPeBoxes  Int       @default(0)
+  
+  // Appearance
+  department    String    @default("Control")
+  userColor     String    @default("#D8D556")
+  
+  // Visual Genetics
+  hairIndex     Int       @default(0)
+  backHairIndex Int       @default(0)
+  eyeIndex      Int       @default(0)
+  mouthIndex    Int       @default(0)
+  suitIndex     Int       @default(0)
+  hairColor     String    @default("#000000")
+  
+  lastSeen      DateTime  @default(now())
+}
